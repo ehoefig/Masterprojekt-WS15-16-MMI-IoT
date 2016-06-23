@@ -4,7 +4,8 @@ var React = require('react')
 var NewSensor = React.createClass({
 
   propTypes: {
-    handleNew: React.PropTypes.func
+    handleNew: React.PropTypes.func,
+    user: React.PropTypes.object 
   },
 
   getInitialState: function() {
@@ -56,18 +57,30 @@ var NewSensor = React.createClass({
 
   handleSave: function() {
     var that = this;
+    var types;
+    if (this.state.sensorType) {
+        
+      types = this.state.sensorType.split(',');
+      types = types.map(function(t) {
+        return t.trim();
+      });
+    } else {
+      types = this.state.sensorType;
+    }
     if (this.state.name &&
         this.state.sensorType &&
         this.state.attachedGateway &&
         this.state.location) {
       var json = {
         isActive: true,
-        name: this.state.name,
+        name: this.state.name || this.props.sensor.name,
         sensorType: this.state.sensorType,
-        //attachedGateway: this.state.attachedGateway,
-        attachedGateway: "d95e5a53-adff-490c-b0a3-7ec539a81c7f",
-        attachedClusters: [],
-        location: this.state.location
+        types: types,
+        attachedGateway: this.state.attachedGateway,
+        attachedCluster: this.state.attachedClusters,
+        owner: this.props.user.username,
+        location: this.state.location,
+        creationDate: new Date("2015-03-25T12:00:00")
       };
       request
         .post('/sensor')
