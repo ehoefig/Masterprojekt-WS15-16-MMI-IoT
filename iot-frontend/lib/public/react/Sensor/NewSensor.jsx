@@ -10,7 +10,7 @@ var NewSensor = React.createClass({
 
   getInitialState: function() {
     return {
-      isActive: true,// test2
+      isActive: true,
       name: '',
       sensorType: '',
       attachedGateway: '',
