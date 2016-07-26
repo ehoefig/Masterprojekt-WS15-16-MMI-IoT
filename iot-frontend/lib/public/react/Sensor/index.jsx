@@ -125,7 +125,7 @@ var MultipleSensors = React.createClass({
         ? <div className='new-sensor-container'>
             <div className='row column' style={{float: 'none'}}>
               <div className='callout'>
-                <NewSensor handleNew={this.handleNew}/>
+                <NewSensor handleNew={this.handleNew} user={this.props.user}/>
               </div>
             </div>
           </div>
