@@ -49,6 +49,8 @@ var TestNew = React.createClass({
     //newAll.splice(0, remove);
     //newAll2.splice(0, remove);
     //newAll3.splice(0, remove);
+//      console.log(nextProps);
+//      console.log('nextProps');
     var x = { value: nextProps.value.value[0], time: nextProps.value.time, color: '#E83A25'};
     var y = { value: nextProps.value.value[1], time: nextProps.value.time, color: '#98CC96'};
     var z = { value: nextProps.value.value[2], time: nextProps.value.time, color: '#004563'};

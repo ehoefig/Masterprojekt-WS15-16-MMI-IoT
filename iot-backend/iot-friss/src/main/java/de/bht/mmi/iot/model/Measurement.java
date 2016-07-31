@@ -20,6 +20,11 @@ public class Measurement {
     private List<Number> acceleration;
 
     private List<Number> orientation;
+    
+    private int x;
+    
+    private int y;
+    
 
     private String location;
 
@@ -47,7 +52,23 @@ public class Measurement {
     public void setAcceleration(List<Number> acceleration) {
         this.acceleration = acceleration;
     }
+    
+    public int getX() {
+        return x;
+    }
 
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
+    public void setY(int y) {
+        this.y = y;
+    }
+    
     public List<Number> getOrientation() {
         return orientation;
     }

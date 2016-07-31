@@ -4,6 +4,7 @@ import de.bht.mmi.iot.exception.EntityNotFoundException;
 import de.bht.mmi.iot.exception.NotAuthorizedException;
 import de.bht.mmi.iot.model.Sensor;
 import org.springframework.security.core.userdetails.UserDetails;
+import java.util.ArrayList;
 
 public interface SensorService {
 
@@ -32,6 +33,8 @@ public interface SensorService {
             throws EntityNotFoundException, NotAuthorizedException;
 
     Sensor save(Sensor sensor) throws EntityNotFoundException;
+    
+    ArrayList<Sensor> getAllByTypes(String types, UserDetails authenticatedUser) throws EntityNotFoundException, NotAuthorizedException;
 
     Sensor save(Sensor sensor, UserDetails authenticatedUser)
             throws EntityNotFoundException, NotAuthorizedException;
