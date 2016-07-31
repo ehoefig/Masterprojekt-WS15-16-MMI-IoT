@@ -15,6 +15,7 @@ module.exports = me = {};
 me.getAll = (req, res, next) => {
   Model.getAll(req.user)
   .then(sensors => {
+    allSensors = sensors;
     req.sensors = sensors;
     return next();
   })
@@ -70,6 +71,7 @@ me.sendJson = function(req, res) {
 };
 
 me.render = function(req, res) {
+    
   var out
     , body;
   if (req.sensor) {
@@ -80,7 +82,8 @@ me.render = function(req, res) {
         username: req.user.username,
         isAdmin: req.isAdmin
       },
-      sensor: req.sensor
+      sensor: req.sensor,
+      allSensors: allSensors
     };
     var sensor = new SingleSensor(out);
     body = ReactDOM.renderToStaticMarkup(sensor);

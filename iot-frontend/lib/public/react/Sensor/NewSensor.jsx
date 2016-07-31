@@ -5,10 +5,14 @@ var NewSensor = React.createClass({
 
   propTypes: {
     handleNew: React.PropTypes.func,
-    user: React.PropTypes.object 
+    user: React.PropTypes.object,
+    sensors: React.PropTypes.object
   },
 
   getInitialState: function() {
+    
+//    var sensor = _.clone(this.props.sensor);
+//    sensor.types = sensor.types.join(', ');
     return {
       isActive: true,
       name: '',
@@ -69,18 +73,16 @@ var NewSensor = React.createClass({
     }
     if (this.state.name &&
         this.state.sensorType &&
-        this.state.attachedGateway &&
         this.state.location) {
       var json = {
-        isActive: true,
-        name: this.state.name || this.props.sensor.name,
-        sensorType: this.state.sensorType,
-        types: types,
-        attachedGateway: this.state.attachedGateway,
-        attachedCluster: this.state.attachedClusters,
-        owner: this.props.user.username,
-        location: this.state.location,
-        creationDate: new Date("2015-03-25T12:00:00")
+      name: this.state.name || this.props.sensor.name,
+      types: types,
+      location: this.state.location,
+      attachedGateway: this.state.attachedGateway,
+      attachedCluster: this.state.attachedClusters,
+      owner: this.props.user.username,
+      creationDate: new Date("2015-03-25T12:00:00"),
+      isActive: true,
       };
       request
         .post('/sensor')
@@ -89,7 +91,7 @@ var NewSensor = React.createClass({
           if (err) return console.log(err);
           //TODO: add warning
           //res.body === statuscode
-          console.log(res);
+          //console.log(res);
           that.props.handleNew();
         });
     }

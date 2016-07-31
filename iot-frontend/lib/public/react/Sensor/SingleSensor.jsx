@@ -5,7 +5,10 @@ var React = require('react')
   , rabbit = require('../../js/rabbit')
   , DynamoArrow = require('../shared/DynamoArrow')
   , DynamoGraph = require('../shared/DynamoGraph')
-  , TopBar = require('../shared/TopBar');
+  , TopBar = require('../shared/TopBar')
+  , CanvasPos = require('../shared/CanvasPos')
+  , Bluebird = require('bluebird')
+  , request = require('superagent');
 
 var EditSensor = require('./EditSensor')
   , DeleteSensor = require('./DeleteSensor');
@@ -14,11 +17,15 @@ var SingleSensor = React.createClass({
 
   propTypes: {
     user: React.PropTypes.object,
-    sensor: React.PropTypes.object
+    sensor: React.PropTypes.object,
+    allSensors : React.PropTypes.array
   },
 
   getInitialState: function() {
     return {
+      robots: [],
+      labyrinth: false,
+      robot:  null,
       isLive: false,
       connection: {},
       cQ: [0, 0, 0, 0],
@@ -39,19 +46,29 @@ var SingleSensor = React.createClass({
   },
 
   componentDidMount: function() {
-    //var i = 0;
-    //var max = this.state.data.length - 1;
-    //var that = this;
-    //setInterval(function() {
-      //if (i === max) i =0;
-      //var date = that.state.data[i].time;
-      ////console.log('date', date);
-      //that.setState({
-        //cQ: that.state.data[i].orientation,
-        //cA: {acceleration: that.state.data[i].acceleration, time: date}
-      //});
-      //i++;
-    //}, 13);
+    
+    //Ist der Sensor vom Typ: "Labyrinth", werden alle Sensoren gesucht die den selben Typ haben.(this.state.robots) Damit diese von der RabbitMQ abboniert werden können.
+    for(var x = 0; x < this.props.sensor.types.length; x++){
+
+        if(this.props.sensor.types[x] == 'labyrinth' || this.props.sensor.types[x] == 'Labyrinth'){
+            
+            this.state.labyrinth = true;
+        }
+    }
+    
+    if(this.state.labyrinth == true){
+        
+        for(var i = 0; i < this.props.allSensors.length; i++){
+
+            for(var j = 0; j < this.props.allSensors[i].types.length; j++){
+
+                if(this.props.allSensors[i].types[j] == "labyrinth" || this.props.allSensors[i].types[j] == "Labyrinth"){
+
+                    this.state.robots.push(this.props.allSensors[i]);
+                }
+            }
+        }   
+    }
   },
 
   handleSwitch: function() {
@@ -59,6 +76,7 @@ var SingleSensor = React.createClass({
     console.log('is it live:', isLive);
     if (isLive) {
       var connection = this.connect();
+        console.log(this);
     } else {
       this.disconnect();
     }
@@ -71,20 +89,9 @@ var SingleSensor = React.createClass({
     var max = body.length
     var hz = Math.floor(1000/max) - 2;
     var i = 0;
-    //var myInterval = setInterval(function() {
-      //if (i == max) {
-        //i = 0;
-        //clearInterval(myInterval);
-      //}
-      //var date = body[i].time;
-      //that.setState({
-        //cQ: body[i].orientation,
-        //cA: {acceleration: body[i].acceleration, time: date}
-      //});
-      //i++;
-    //}, hz);
+
     this.setState({data: body}, function() {
-      console.log('neue daten');
+        
       var myInterval = setInterval(function() {
         if (i++ == max - 1) {
           i = 0;
@@ -95,6 +102,7 @@ var SingleSensor = React.createClass({
         var date = that.state.data[i].time;
         var maxDate = that.state.data[that.state.data.length - 1].time;
         that.setState({
+          robot:  that.state.data[i],
           cQ: that.state.data[i].orientation,
           cA: {value: that.state.data[i].acceleration, time: date},
           maxDate: {time: maxDate},
@@ -103,19 +111,48 @@ var SingleSensor = React.createClass({
       }, hz);
     });
   },
+    
+  test2: function(body) {
+   
+      this.setState({
+          robot:  body[0]
+      });
+  },
 
   connect: function() {
-    var that = this;
-    var rabbitClient = rabbit.connect();
-    rabbitClient.connect('guest', 'guest', function() {
-      console.log('connect');
-      var subscription = rabbitClient
-        .subscribe('/exchange/friss_exch/' + that.props.sensor.id, function(msg) {
-           //console.log(JSON.parse(msg.body));
-           that.test(JSON.parse(msg.body));
-      });
-    });
-    return rabbitClient;
+    
+      if(this.state.labyrinth == false){
+        
+        var that = this;
+        var rabbitClient = rabbit.connect();
+        rabbitClient.connect('guest', 'guest', function() {
+          var subscription = rabbitClient
+            .subscribe('/exchange/friss_exch/'+that.props.sensor.id, function(msg) {
+
+               //console.log(JSON.parse(msg.body));
+               that.test(JSON.parse(msg.body));
+          });
+        });
+        return rabbitClient;
+      } else if(this.state.labyrinth == true){
+          
+        var that = this;      
+        var rabbitClient = rabbit.connect();
+        rabbitClient.connect('guest', 'guest', function() {
+               
+            for(var i = 0; i < that.state.robots.length; i++){
+                var id = that.state.robots[i].id;
+                
+                rabbitClient
+                .subscribe('/exchange/friss_exch/' + id, function(msg) {
+
+                   that.test2(JSON.parse(msg.body));
+                });
+            }
+            
+        });
+        return rabbitClient;
+      }
   },
 
   disconnect: function() {
@@ -171,6 +208,7 @@ var SingleSensor = React.createClass({
   },
 
   render: function() {
+      
     var displayStyle = this.state.editSensor || this.state.deleteSensor
                         ? 'block' : 'none';
     return (
@@ -219,6 +257,7 @@ var SingleSensor = React.createClass({
                 </div>
               </div>
               <div className='row'>
+
                 <div className='large-6 columns'>
                   <h5>Orientation</h5>
                   { this.state.isLive
@@ -233,11 +272,14 @@ var SingleSensor = React.createClass({
                     : <DynamoGraph />
                   }
                 </div>
+
+                <div className='large-15 columns'>
+                    <CanvasPos value={this.state.robot} sensorType={this.props.sensor.types} sensor={this.props.sensor}/>
+                </div>
               </div>
             </div>
           </div>
         </div>
-
         {this.state.editSensor
           ? <EditSensor cancelCallback={this.handleEditSensor}
             sensor={this.props.sensor}/>
