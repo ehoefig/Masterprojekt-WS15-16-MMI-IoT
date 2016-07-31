@@ -70,5 +70,4 @@ public class FrissListener {
             LOGGER.error(String.format("Unable to process bulk message with id: '%s'", messageId), e);
         }
     }
-
 }

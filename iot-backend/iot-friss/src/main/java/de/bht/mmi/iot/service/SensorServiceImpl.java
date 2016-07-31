@@ -18,6 +18,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.ArrayList;
 
 import static de.bht.mmi.iot.constants.RoleConstants.*;
 
@@ -61,9 +62,11 @@ public class SensorServiceImpl implements SensorService {
         final Set<Sensor> result = new HashSet<>();
         CollectionUtils.addAll(result, getAllByOwner(username));
         CollectionUtils.addAll(result, getAllReleasedForUser(username));
+        
         for (String clusterId : user.getReleasedForClusters()) {
             CollectionUtils.addAll(result, getAllByClusterId(clusterId));
         }
+        
         return result;
     }
 
@@ -100,6 +103,26 @@ public class SensorServiceImpl implements SensorService {
         }
         throw new NotAuthorizedException(
                 String.format("You are not authorized to get all sensors for owner '%s'", username));
+    }
+    
+    @Override
+    public  ArrayList<Sensor> getAllByTypes(String types, UserDetails authenticatedUser) throws EntityNotFoundException, NotAuthorizedException {
+        
+        Iterable<Sensor> userSensors = sensorRepository.findAll();
+        ArrayList<Sensor> getSensor = new ArrayList<Sensor>();
+        
+        for(Sensor mi : userSensors) {
+            
+            for(String sensorTyp : mi.getTypes()) {
+
+                if(sensorTyp.toLowerCase().equals("labyrinth")) {
+                    getSensor.add(mi);
+                }
+            }
+
+        }
+        
+        return getSensor;
     }
 
     @Override
@@ -163,11 +186,16 @@ public class SensorServiceImpl implements SensorService {
     }
     @Override
     public Sensor save(Sensor sensor) throws EntityNotFoundException {
+        
         userService.loadUserByUsername(sensor.getOwner());
         if (sensor.getAttachedCluster() != null) {
+            System.out.println(" "+sensor.getAttachedCluster());
+            
             clusterService.getOne(sensor.getAttachedCluster());
         }
         if (sensor.getAttachedGateway() != null) {
+            System.out.println(" "+sensor.getAttachedGateway());
+            
             gatewayService.getOne(sensor.getAttachedGateway());
         }
         return sensorRepository.save(sensor);
